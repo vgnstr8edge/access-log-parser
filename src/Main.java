@@ -15,6 +15,10 @@ public class Main {
             boolean fileExists = file.exists();
             boolean isDirectory = file.isDirectory();
 
+            int googlebot = 0;
+            int yandexbot = 0;
+            int total = 0;
+
 
             if (isDirectory) {
                 System.out.println("Данный путь ведет к папке. Повторите ввод.");
@@ -31,21 +35,11 @@ public class Main {
                     BufferedReader reader = new BufferedReader(fileReader);
 
                     int lineNumber = 0;
-                    int maxLength = 0;
-                    int minLength = Integer.MAX_VALUE;
 
                     String line;
                     while ((line = reader.readLine()) != null) {
                         lineNumber++;
                         int length = line.length();
-
-                        if (length > maxLength) {
-                            maxLength = length;
-                        }
-
-                        if (length < minLength) {
-                            minLength = length;
-                        }
 
                         if (length > 1024) {
                             throw new RuntimeException("Строка длиннее 1024 символов");
@@ -53,8 +47,28 @@ public class Main {
                     }
 
                     System.out.println("Общее количество строк в файле: " + lineNumber);
-                    System.out.println("Длина самой длинной строки в файле: " + maxLength);
-                    System.out.println("Длина самой короткой строки в файле: " + minLength);
+
+
+                    String firstBrackets = line.substring(line.indexOf("(") + 1, line.indexOf(")"));
+                    String[] parts = firstBrackets.split(";");
+                    if (parts.length >= 2) {
+                        String fragment = parts[1].trim();
+                        String program = fragment.substring(0, fragment.indexOf("/"));
+
+                        if (program.equals("Googlebot")) {
+                            googlebot++;
+                        } else if (program.equals("YandexBot")) {
+                            yandexbot++;
+                        }
+                    }
+
+
+                double googlebotRatio = (double) googlebot / total * 100;
+                double yandexbotRatio = (double) yandexbot / total* 100;
+
+                System.out.println("Доля запросов Googlebot: " + googlebotRatio + "%");
+                System.out.println("Доля запросов YandexBot: " + yandexbotRatio + "%");
+
 
                 } catch (Exception ex) {
                     ex.printStackTrace();
