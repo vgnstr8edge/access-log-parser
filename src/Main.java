@@ -6,7 +6,6 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
         int count = 0;
-
         while (true) {
             System.out.println("Введите путь к файлу: ");
             String path = new Scanner(System.in).nextLine();
@@ -29,6 +28,8 @@ public class Main {
                 System.out.println("Путь указан верно.");
                 System.out.println("Это файл номер " + count);
 
+                Statistics statistics = new Statistics();
+
                 try {
                     FileReader fileReader = new FileReader(path);
                     BufferedReader reader = new BufferedReader(fileReader);
@@ -44,37 +45,29 @@ public class Main {
                             throw new RuntimeException("Строка длиннее 1024 символов");
                         }
 
-                        int firstBracketIndex = line.indexOf("(");
-                        int lastBracketIndex = line.indexOf(")");
+                        LogEntry entry = new LogEntry(line);
+                        statistics.addEntry(entry);
 
-                        if (firstBracketIndex == -1 || lastBracketIndex == -1 || firstBracketIndex > lastBracketIndex) {
-                            continue;
+
+                        if (entry.getUserAgent().getBrowser().equals("Googlebot")) {
+                            googlebot++;
+                        } else if (entry.getUserAgent().getBrowser().equals("YandexBot")) {
+                            yandexbot++;
                         }
-
-                        String firstBrackets = line.substring(firstBracketIndex + 1, lastBracketIndex);
-                        String[] parts = firstBrackets.split(";");
-                        if (parts.length >= 2) {
-                            String fragment = parts[1].trim();
-                            if (fragment.indexOf("/") != -1) {
-                                String program = fragment.substring(0, fragment.indexOf("/"));
-
-                                if (program.equals("Googlebot")) {
-                                    googlebot++;
-                                } else if (program.equals("YandexBot")) {
-                                    yandexbot++;
-                                }
-                                total++;
-                            }
-                        }
+                        total++;
                     }
 
                     System.out.println("Общее количество строк в файле: " + lineNumber);
 
                     double googlebotRatio = (double) googlebot / total * 100;
-                    double yandexbotRatio = (double) yandexbot / total * 100;
+                    double yandexbotRatio = (double) yandexbot / total* 100;
 
                     System.out.println("Доля запросов Googlebot: " + googlebotRatio + "%");
                     System.out.println("Доля запросов YandexBot: " + yandexbotRatio + "%");
+
+
+                    System.out.println("Общий объем трафика: " + statistics.totalTraffic);
+                    System.out.println("Скорость трафика: " + statistics.getTrafficRate() + " байт/час");
 
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -84,11 +77,7 @@ public class Main {
                 System.out.println("Данный путь некорректен. Повторите ввод.");
             }
         }
+
     }
+
 }
-
-
-
-
-
-
