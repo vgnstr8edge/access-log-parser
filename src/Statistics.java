@@ -10,6 +10,8 @@ public class Statistics {
     private LocalDateTime maxTime;
     private static HashSet<String> existingPages = new HashSet<>();
     private static HashMap<String, Integer> osFrequency = new HashMap<>();
+    private static HashSet<String> nonExistingPages = new HashSet<>();
+    private static HashMap<String, Integer> browserFrequency = new HashMap<>();
 
     public Statistics() {
         totalTraffic = 0;
@@ -19,6 +21,10 @@ public class Statistics {
 
     public static HashSet<String> getExistingPages() {
         return existingPages;
+    }
+
+    public static HashSet<String> getNonExistingPages() {
+        return nonExistingPages;
     }
 
     public static HashMap<String, Double> getOsStatistics() {
@@ -34,7 +40,21 @@ public class Statistics {
         return osStatistics;
     }
 
+    public static HashMap<String, Double> getBrowserStatistics() {
+        HashMap<String, Double> browserStatistics = new HashMap<>();
+        int totalBrowsers = 0;
+        for (int count : browserFrequency.values()) {
+            totalBrowsers += count;
+        }
+        for (String browser : browserFrequency.keySet()) {
+            double ratio = (double) browserFrequency.get(browser) / totalBrowsers;
+            browserStatistics.put(browser, ratio);
+        }
+        return browserStatistics;
+    }
+
     public void addEntry(LogEntry entry) {
+        String browser = entry.getUserAgent().getBrowser();
         totalTraffic += entry.getDataSize();
         if (entry.getDateTime().isBefore(minTime)) {
             minTime = entry.getDateTime();
@@ -50,6 +70,14 @@ public class Statistics {
             osFrequency.put(os, osFrequency.get(os) + 1);
         } else {
             osFrequency.put(os, 1);
+        }
+        if (entry.getResponseCode() == 404) {
+            nonExistingPages.add(entry.getPath());
+        }
+        if (browserFrequency.containsKey(browser)) {
+            browserFrequency.put(browser, browserFrequency.get(browser) + 1);
+        } else {
+            browserFrequency.put(browser, 1);
         }
     }
 
