@@ -41,4 +41,8 @@ public class UserAgent {
     public String getBrowser() {
         return browser;
     }
+
+    public boolean isBot() {
+        return browser.toLowerCase().contains("bot");
+    }
 }

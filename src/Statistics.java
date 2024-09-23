@@ -12,11 +12,16 @@ public class Statistics {
     private static HashMap<String, Integer> osFrequency = new HashMap<>();
     private static HashSet<String> nonExistingPages = new HashSet<>();
     private static HashMap<String, Integer> browserFrequency = new HashMap<>();
+    private int userVisits;
+    private int errorRequests;
+    private static HashSet<String> uniqueUserIps = new HashSet<>();
 
     public Statistics() {
         totalTraffic = 0;
         minTime = LocalDateTime.MAX;
         maxTime = LocalDateTime.MIN;
+        userVisits = 0;
+        errorRequests = 0;
     }
 
     public static HashSet<String> getExistingPages() {
@@ -79,11 +84,34 @@ public class Statistics {
         } else {
             browserFrequency.put(browser, 1);
         }
+
+        if (!entry.getUserAgent().isBot()) {
+            userVisits++;
+            uniqueUserIps.add(entry.getIp());
+        }
+
+        if (entry.getResponseCode() >= 400 && entry.getResponseCode() < 600) {
+            errorRequests++;
+        }
     }
 
     public double getTrafficRate() {
         long timeDiff = ChronoUnit.HOURS.between(minTime, maxTime);
         return (double) totalTraffic / timeDiff;
+    }
+
+    public double getAverageUserVisitsPerHour() {
+        long timeDiff = ChronoUnit.HOURS.between(minTime, maxTime);
+        return (double) userVisits / timeDiff;
+    }
+
+    public double getAverageErrorRequestsPerHour() {
+        long timeDiff = ChronoUnit.HOURS.between(minTime, maxTime);
+        return (double) errorRequests / timeDiff;
+    }
+
+    public double getAverageVisitsPerUser() {
+        return (double) userVisits / uniqueUserIps.size();
     }
 
 }
