@@ -1,3 +1,5 @@
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
@@ -15,6 +17,9 @@ public class Statistics {
     private int userVisits;
     private int errorRequests;
     private static HashSet<String> uniqueUserIps = new HashSet<>();
+    private static HashMap<Integer, Integer> visitsPerSecond = new HashMap<>();
+    private static HashSet<String> refererDomains = new HashSet<>();
+    private static HashMap<String, Integer> visitsPerUser = new HashMap<>();
 
     public Statistics() {
         totalTraffic = 0;
@@ -93,7 +98,30 @@ public class Statistics {
         if (entry.getResponseCode() >= 400 && entry.getResponseCode() < 600) {
             errorRequests++;
         }
+
+        if (!entry.getUserAgent().isBot()) {
+            int second = entry.getDateTime().getSecond();
+            visitsPerSecond.put(second, visitsPerSecond.getOrDefault(second, 0) + 1);
+        }
+
+        String referer = entry.getReferer();
+        if (referer != null) {
+            try {
+                URL url = new URL(referer);
+                String domain = url.getHost();
+                refererDomains.add(domain);
+            } catch (MalformedURLException e) {
+                System.out.println("Некорректный URL: " + referer);
+            }
+        }
+
+        if (!entry.getUserAgent().isBot()) {
+            String ip = entry.getIp();
+            visitsPerUser.put(ip, visitsPerUser.getOrDefault(ip, 0) + 1);
+        }
+
     }
+
 
     public double getTrafficRate() {
         long timeDiff = ChronoUnit.HOURS.between(minTime, maxTime);
@@ -112,6 +140,18 @@ public class Statistics {
 
     public double getAverageVisitsPerUser() {
         return (double) userVisits / uniqueUserIps.size();
+    }
+
+    public int getPeakVisitsPerSecond() {
+        return visitsPerSecond.values().stream().max(Integer::compare).orElse(0);
+    }
+
+    public HashSet<String> getRefererDomains() {
+        return refererDomains;
+    }
+
+    public int getMaxVisitsPerUser() {
+        return visitsPerUser.values().stream().max(Integer::compare).orElse(0);
     }
 
 }
